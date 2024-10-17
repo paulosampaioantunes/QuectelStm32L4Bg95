@@ -6,9 +6,9 @@
 ../Core/Src/main.c:330:6:sendATCommand	1
 ../Core/Src/main.c:333:6:receiveResponse	1
 ../Core/Src/main.c:337:6:InitialConfigBg95	2
-../Core/Src/main.c:449:6:ConfigPdpContext	2
-../Core/Src/main.c:478:6:ConfigMqttContext	1
-../Core/Src/main.c:500:6:ActivePdp	1
-../Core/Src/main.c:514:6:MqttConnectAndSubscribe	1
-../Core/Src/main.c:528:6:MqttConfigBeforeConnection	1
-../Core/Src/main.c:554:6:Error_Handler	1
+../Core/Src/main.c:435:6:ConfigPdpContext	2
+../Core/Src/main.c:462:6:ConfigMqttContext	1
+../Core/Src/main.c:475:6:ActivePdp	1
+../Core/Src/main.c:483:6:MqttConnectAndSubscribe	1
+../Core/Src/main.c:492:6:MqttConfigBeforeConnection	1
+../Core/Src/main.c:510:6:Error_Handler	1
