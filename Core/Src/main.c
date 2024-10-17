@@ -334,235 +334,217 @@ void receiveResponse(char* buffer, uint16_t bufferSize) {
     HAL_UART_Receive(&huart2, (uint8_t*)buffer, bufferSize, HAL_MAX_DELAY);
 }
 
-void InitialConfigBg95(){
-    char response[128]; // Buffer temporário para respostas AT
+void InitialConfigBg95() {
+    char response[128];   // Buffer temporário para respostas AT
+    char ip[16];          // Buffer para armazenar o endereço IP
+    char command[128];    // Buffer para os comandos AT
 
     // Transmitir os comandos AT pela UART2
-    sendATCommand("AT+CCID\r\n"); // Obter o ICCID
-    HAL_Delay(1000);
 
-    sendATCommand("AT+CIMI\r\n"); // Obter o IMSI
+    // Comando AT+CCID
+    sendATCommand("AT+CCID\r\n");
     HAL_Delay(1000);
+    receiveResponse(response, sizeof(response));
+    printf("Resposta AT+CCID: %s\n", response);
 
-    sendATCommand("AT+CFUN=0\r\n"); // Configurar o módulo para funcionalidade mínima
+    // Comando AT+CIMI
+    sendATCommand("AT+CIMI\r\n");
     HAL_Delay(1000);
+    receiveResponse(response, sizeof(response));
+    printf("Resposta AT+CIMI: %s\n", response);
 
-    sendATCommand("AT+QCFG=\"nwscanmode\",0,1\r\n"); // Configurar a pesquisa de todas as RATs
+    // Comando AT+CFUN=0
+    sendATCommand("AT+CFUN=0\r\n");
     HAL_Delay(1000);
+    receiveResponse(response, sizeof(response));
+    printf("Resposta AT+CFUN=0: %s\n", response);
 
-    sendATCommand("AT+QCFG=\"nwscanseq\",020103,1\r\n"); // Configurar a sequência de pesquisa de RAT
+    // Comando AT+QCFG="nwscanmode",0,1
+    sendATCommand("AT+QCFG=\"nwscanmode\",0,1\r\n");
     HAL_Delay(1000);
+    receiveResponse(response, sizeof(response));
+    printf("Resposta AT+QCFG=\"nwscanmode\": %s\n", response);
 
-    sendATCommand("AT+QCFG=\"band\",0,100002000000000F0E189F,10004200000000090E189F\r\n"); // Configurar bandas de frequência
+    // Comando AT+QCFG="nwscanseq",020103,1
+    sendATCommand("AT+QCFG=\"nwscanseq\",020103,1\r\n");
     HAL_Delay(1000);
+    receiveResponse(response, sizeof(response));
+    printf("Resposta AT+QCFG=\"nwscanseq\": %s\n", response);
 
-    sendATCommand("AT+COPS=0\r\n"); // Seleção automática de operadora
+    // Comando AT+QCFG="band",0,0
+    sendATCommand("AT+QCFG=\"band\",0,0\r\n");
     HAL_Delay(1000);
+    receiveResponse(response, sizeof(response));
+    printf("Resposta AT+QCFG=\"band\": %s\n", response);
 
-    strcpy(apn, "your_apn");  // Armazenar o APN para uso futuro
-    char command[64];
-    snprintf(command, sizeof(command), "AT+CGDCONT=1,\"IP\",\"%s\"\r\n", apn);
+    // Comando AT+COPS=0
+    sendATCommand("AT+COPS=0\r\n");
+    HAL_Delay(1000);
+    receiveResponse(response, sizeof(response));
+    printf("Resposta AT+COPS=0: %s\n", response);
+
+    // Configurar o APN, username e password para a Vivo
+    sendATCommand("AT+CGDCONT=1,\"IP\",\"inlog.vivo.com.br\",\"datatem\",\"datatem\"\r\n");
+    HAL_Delay(1000);
+    receiveResponse(response, sizeof(response));
+    printf("Resposta AT+CGDCONT: %s\n", response);
+
+    // Comando AT+CFUN=1
+    sendATCommand("AT+CFUN=1\r\n");
+    HAL_Delay(1000);
+    receiveResponse(response, sizeof(response));
+    printf("Resposta AT+CFUN=1: %s\n", response);
+
+    // Comando AT+CREG=1;+CGREG=1;+CEREG=1
+    sendATCommand("AT+CREG=1;+CGREG=1;+CEREG=1\r\n");
+    HAL_Delay(1000);
+    receiveResponse(response, sizeof(response));
+    printf("Resposta AT+CREG=1;+CGREG=1;+CEREG=1: %s\n", response);
+
+    // Comando AT+COPS?
+    sendATCommand("AT+COPS?\r\n");
+    HAL_Delay(1000);
+    receiveResponse(response, sizeof(response));
+    printf("Resposta AT+COPS?: %s\n", response);
+
+    // Comando AT+QCSQ
+    sendATCommand("AT+QCSQ\r\n");
+    HAL_Delay(1000);
+    receiveResponse(response, sizeof(response));
+    printf("Resposta AT+QCSQ: %s\n", response);
+
+    // Comando AT+CREG?;+CEREG?;+CGREG?
+    sendATCommand("AT+CREG?;+CEREG?;+CGREG?\r\n");
+    HAL_Delay(1000);
+    receiveResponse(response, sizeof(response));
+    printf("Resposta AT+CREG?;+CEREG?;+CGREG?: %s\n", response);
+
+    // Comando AT+CGATT=1 (Conectar à rede)
+    sendATCommand("AT+CGATT=1\r\n");
+    HAL_Delay(1000);
+    receiveResponse(response, sizeof(response));
+    printf("Resposta AT+CGATT=1: %s\n", response);
+
+    // Verificar o endereço IP alocado
+    sendATCommand("AT+CGPADDR\r\n");
+    HAL_Delay(1000);
+    receiveResponse(response, sizeof(response));
+    printf("Resposta AT+CGPADDR: %s\n", response);
+
+    // Extrair o endereço IP da resposta
+    if (sscanf(response, "+CGPADDR: 1,\"%15[^\"]", ip) == 1) {
+        printf("Endereço IP alocado: %s\n", ip); // Exibir o IP
+    } else {
+        printf("Falha ao obter o endereço IP.\n");
+    }
+
+    // Realizar um teste de ping com o IP obtido
+    snprintf(command, sizeof(command), "AT+QPING=1,\"%s\"\r\n", ip);
+    sendATCommand(command);
+    HAL_Delay(1000);
+    receiveResponse(response, sizeof(response));
+    printf("Resposta AT+QPING: %s\n", response);
+}
+
+void ConfigPdpContext(){
+    char command[128];
+    char response[256];
+
+    // Configurar APN com o contexto CID 1, com login e senha
+    snprintf(command, sizeof(command), "AT+CGDCONT=1,\"IP\",\"inlog.vivo.com.br\",\"\",0,0\r\n");
     sendATCommand(command);
     HAL_Delay(1000);
 
-    sendATCommand("AT+CFUN=1\r\n"); // Habilitar funcionalidade completa
+    // Ativar o contexto PDP
+    sendATCommand("AT+CGACT=1,1\r\n");
     HAL_Delay(1000);
 
-    sendATCommand("AT+CREG=1;+CGREG=1;+CEREG=1\r\n"); // Habilitar códigos de resultado não solicitados para registro de rede
+    // Verificar se o contexto PDP está ativo
+    sendATCommand("AT+CGPADDR=1\r\n");
     HAL_Delay(1000);
 
-    sendATCommand("AT+COPS?\r\n"); // Verificar a seleção de operadora
-    HAL_Delay(1000);
-
-    sendATCommand("AT+QCSQ\r\n"); // Verificar a tecnologia ativa e a força do sinal
-    HAL_Delay(1000);
-
-    sendATCommand("AT+CREG?;+CEREG?;+CGREG?\r\n"); // Verificar o estado de registro na rede
-    HAL_Delay(1000);
-
-    sendATCommand("AT+CGATT=1\r\n"); // Abrir um contexto de dados
-    HAL_Delay(1000);
-
-    sendATCommand("AT+CGPADDR\r\n"); // Verificar o endereço IP alocado
-    HAL_Delay(1000);
-
-    // Receber o IP de resposta e armazenar na variável global
+    // Receber a resposta e verificar se contém o IP
     receiveResponse(response, sizeof(response));
-    sscanf(response, "+CGPADDR: 1,\"%15[^\"]", ip); // Extrair o IP da resposta e salvar
-    HAL_Delay(1000);
-
-    sendATCommand("AT+QPING=1,\"192.168.109.2\"\r\n"); // Realizar um teste de ping
-    HAL_Delay(1000);
-}
-void ConfigPdpContext(){
-    char command[64];
-    char response[128];
-
-    // Enviar o comando para ativar o contexto PDP
-    sendATCommand("AT+QIACT=1\r\n");
-    HAL_Delay(1000);
-
-    // Verificar se a ativação foi bem-sucedida
-    sendATCommand("AT+QIACT?\r\n");
-    HAL_Delay(1000);
-
-    // Receber a resposta e verificar se contém o IP (verificação básica)
-    receiveResponse(response, sizeof(response));
-    if (strstr(response, ip)) {
-        // Ativação bem-sucedida, o IP foi alocado corretamente
-        snprintf(command, sizeof(command), "PDP context ativado com sucesso. APN: %s, IP: %s\r\n", apn, ip);
+    if (strstr(response, "0.0.0.0") == NULL) {
+        // Contexto PDP ativado com sucesso, IP foi alocado corretamente
+        snprintf(command, sizeof(command), "PDP context ativado com sucesso. APN: inlog.vivo.com.br, IP: %s\r\n", response);
         sendATCommand(command); // Transmitir a mensagem de sucesso pela UART
     } else {
         // Erro ao ativar o contexto PDP
         sendATCommand("Erro ao ativar o contexto PDP\r\n");
     }
 }
+
 void ConfigMqttContext() {
-    // Enviar comandos de configuração inicial do MQTT via UART
-    sendATCommand("AT+QMTCFG=\"version\",0,4\r\n"); // Definir a versão do MQTT como 3.1.1 (versão 4)
+    // Configurar a versão MQTT como 3.1.1
+    sendATCommand("AT+QMTCFG=\"version\",0,4\r\n");
     HAL_Delay(1000);
 
-    sendATCommand("AT+QMTCFG=\"pdpcid\",0,1\r\n"); // Associar o contexto PDP ao cliente MQTT
+    // Associar o contexto PDP ao cliente MQTT
+    sendATCommand("AT+QMTCFG=\"pdpcid\",0,1\r\n");
     HAL_Delay(1000);
 
-    sendATCommand("AT+QMTCFG=\"ssl\",0,1,0\r\n"); // Habilitar SSL para o contexto MQTT
+    // Habilitar SSL para o cliente MQTT
+    sendATCommand("AT+QMTCFG=\"ssl\",0,1,0\r\n");
     HAL_Delay(1000);
 
-    sendATCommand("AT+QMTCFG=\"keepalive\",0,0\r\n"); // Configurar o intervalo de keepalive para 0 (sem limite)
+    // Configurar keepalive para 3600 segundos
+    sendATCommand("AT+QMTCFG=\"keepalive\",0,3600\r\n");
     HAL_Delay(1000);
 
-    sendATCommand("AT+QMTCFG=\"session\",0,1\r\n"); // Configurar para manter a sessão ativa após desconexão
+    // Configurar o "Will Message" do MQTT
+    sendATCommand("AT+QMTCFG=\"will\",0,1,0,1,\"/test/will\",\"Client disconnected unexpectedly\"\r\n");
     HAL_Delay(1000);
-
-    sendATCommand("AT+QMTCFG=\"timeout\",0,90,0,1\r\n"); // Definir o timeout de 90 segundos
-    HAL_Delay(1000);
-
-    sendATCommand("AT+QMTCFG=\"will\",0,1,0,1,\"/test/will\",\"Client disconnected unexpectedly\"\r\n"); // Configurar a mensagem de "will" (última vontade)
-    HAL_Delay(1000);
-
-    sendATCommand("AT+QMTCFG=\"recv/mode\",0,0,1\r\n"); // Configurar o modo de recebimento
-    HAL_Delay(1000);
-
 }
+
 void ActivePdp() {
-    // Verifica se a APN está configurada corretamente
+    // Verificar se o APN está configurado corretamente
     sendATCommand("AT+CGDCONT?\r\n");
     HAL_Delay(1000);
 
-    // Ativa o contexto PDP (com o CID 1)
+    // Ativar o contexto PDP
     sendATCommand("AT+CGACT=1,1\r\n");
     HAL_Delay(1000);
 
-    // Verifica se um endereço IP foi atribuído
+    // Verificar se um endereço IP foi atribuído
     sendATCommand("AT+CGPADDR=1\r\n");
     HAL_Delay(1000);
-
-    // Verifica se a APN e a rede estão devidamente configuradas
-    sendATCommand("AT+COPS?\r\n");
-    HAL_Delay(1000);
-
-    // Tenta desconectar um canal MQTT ocupado e tenta se conectar a outro
-    for (int channel = 1; channel <= 5; channel++) {
-        // Desconecta o canal ocupado
-        char command[30];
-        sprintf(command, "AT+QMTDISC=%d\r\n", channel);
-        sendATCommand(command);
-        HAL_Delay(1000);
-    }
 }
+
 void MqttConnectAndSubscribe() {
-    // Abrir conexão com o broker MQTT (usando o canal 3)
-    sendATCommand("AT+QMTOPEN=3,\"3.228.101.77\",1883\r\n"); // ou usar o IP "172.31.82.252"
-    HAL_Delay(2000); // Aguardar resposta do comando
-    // Conectar ao broker MQTT com ID "teste" e credenciais "pixtest"
-    sendATCommand("AT+QMTCONN=3,\"teste\",\"pixtest\",\"pixtest\"\r\n");
-    HAL_Delay(2000); // Aguardar resposta do comando
-    // Assinar o tópico "test" no nível QoS 0 para receber dados
-    sendATCommand("AT+QMTSUB=3,1,\"test\",0\r\n");
-    HAL_Delay(1000); // Aguardar resposta do comando
+    // Conectar ao broker MQTT
+    sendATCommand("AT+QMTOPEN=0,\"broker.mqttdashboard.com\",1883\r\n");
+    HAL_Delay(2000);
 
-}
-void MqttConfigBeforeConnection() {
-    // Verificar informações do módulo
-    sendATCommand("ATI\r\n");
+    // Conectar ao broker MQTT com ID e credenciais
+    sendATCommand("AT+QMTCONN=0,\"clienteID\",\"usuario\",\"senha\"\r\n");
+    HAL_Delay(2000);
+
+    // Inscrever-se no tópico "test" com QoS 0
+    sendATCommand("AT+QMTSUB=0,1,\"test\",0\r\n");
     HAL_Delay(1000);
+}
 
-    // Verificar o estado de operação do dispositivo
-    sendATCommand("AT+CFUN?\r\n");
-    HAL_Delay(500);
+void MqttConfigBeforeConnection() {
 
-    // Verificar o modo de varredura de rede
-    sendATCommand("AT+QCFG=\"nwscanmode\"\r\n");
-    HAL_Delay(500);
 
-    // Verificar a sequência de varredura de rede
-    sendATCommand("AT+QCFG=\"nwscanseq\"\r\n");
-    HAL_Delay(500);
-
-    // Verificar o modo IoT
-    sendATCommand("AT+QCFG=\"iotopmode\"\r\n");
-    HAL_Delay(500);
-
-    // Verificar o domínio de serviço
-    sendATCommand("AT+QCFG=\"servicedomain\"\r\n");
-    HAL_Delay(500);
-
-    // Configurar a porta para URC (USB Modem)
-    sendATCommand("AT+QURCCFG=\"urcport\",\"usbmodem\"\r\n");
-    HAL_Delay(500);
-
-    // Verificar o status de registro na rede
+    // Verificar se o dispositivo está registrado na rede
     sendATCommand("AT+CREG?\r\n");
     HAL_Delay(500);
 
-    // Verificar o status de registro GPRS
-    sendATCommand("AT+CGREG?\r\n");
-    HAL_Delay(500);
-
-    // Verificar a operadora atual
-    sendATCommand("AT+COPS?\r\n");
+    // Verificar o status do contexto PDP
+    sendATCommand("AT+CGACT?\r\n");
     HAL_Delay(500);
 
     // Verificar a qualidade do sinal
     sendATCommand("AT+CSQ\r\n");
     HAL_Delay(500);
 
-    // Verificar a qualidade do sinal detalhada
-    sendATCommand("AT+QCSQ\r\n");
+    // Configurar o contexto PDP para o canal MQTT
+    sendATCommand("AT+QMTCFG=\"pdpcid\",0,1\r\n");
     HAL_Delay(500);
-
-    // Obter informações de rede
-    sendATCommand("AT+QNWINFO\r\n");
-    HAL_Delay(500);
-
-    // Verificar se o dispositivo está anexado à rede
-    sendATCommand("AT+CGATT?\r\n");
-    HAL_Delay(500);
-
-    // Verificar o status de ativação de contexto PDP
-    sendATCommand("AT+CGACT?\r\n");
-    HAL_Delay(500);
-
-    // Verificar a configuração de contexto PDP
-    sendATCommand("AT+CGDCONT?\r\n");
-    HAL_Delay(500);
-
-    // Configurar o contexto PDP para o canal MQTT (fazer para todos os canais 0-5)
-    for (int i = 0; i <= 5; i++) {
-        char command[50];
-        snprintf(command, sizeof(command), "AT+QMTCFG=\"pdpcid\",%d,1\r\n", i);
-        sendATCommand(command);
-        HAL_Delay(500);
-    }
-
-    // Configurar o keepalive MQTT para 3600 segundos (fazer para todos os canais 0-5)
-    for (int i = 0; i <= 5; i++) {
-        char command[50];
-        snprintf(command, sizeof(command), "AT+QMTCFG=\"keepalive\",%d,3600\r\n", i);
-        sendATCommand(command);
-        HAL_Delay(500);
-    }
 }
+
 /* USER CODE END 4 */
 
 /**
